@@ -4,6 +4,7 @@ Bet Data Panel - FastAPI uygulaması (Coolify / self-hosted).
 Railway/Vercel versiyonundan farkı: normal sunucu ortamı, bağlantı havuzu açık.
 """
 
+import mimetypes
 import time
 import threading
 from contextlib import asynccontextmanager
@@ -90,6 +91,10 @@ app.add_middleware(
 )
 # Arama sonuclari (100-500 satir JSON) sikistirilarak gonderilir.
 app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+# python:3.11-slim .webp'i tanimiyor; ikonlar application/octet-stream gitmesin.
+mimetypes.add_type("image/webp", ".webp")
+
 
 class _StaticFiles(StaticFiles):
     """3D ikonlar degismez; tarayici her sayfada yeniden sormasin (CSS yine ETag ile dogrulanir)."""
