@@ -17,25 +17,28 @@ async def _fetch_user(token: str) -> dict | None:
     """Token'ı Supabase ile doğrula. Geçerliyse kullanıcı dict'i, değilse None."""
     if not token:
         return None
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                f"{settings.supabase_url}/auth/v1/user",
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "apikey": settings.supabase_key
-                }
-            )
-        if response.status_code != 200:
-            return None
-        user_data = response.json()
-        return {
-            "sub": user_data.get("id"),
-            "email": user_data.get("email"),
-            "user": user_data
-        }
-    except httpx.RequestError:
-        return None
+    # Once ic ag (hizli), olmazsa public URL (yedek) denenir.
+    for base in settings.supabase_base_urls:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    f"{base}/auth/v1/user",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "apikey": settings.supabase_key
+                    }
+                )
+            if response.status_code != 200:
+                continue
+            user_data = response.json()
+            return {
+                "sub": user_data.get("id"),
+                "email": user_data.get("email"),
+                "user": user_data
+            }
+        except httpx.RequestError:
+            continue
+    return None
 
 
 def _extract_token(request: Request, credentials: HTTPAuthorizationCredentials | None) -> str | None:
@@ -94,7 +97,7 @@ async def login_with_supabase(email: str, password: str) -> dict:
     """
     Supabase ile giriş yap
     """
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(
             f"{settings.supabase_url}/auth/v1/token?grant_type=password",
             json={
