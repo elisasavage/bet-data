@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # Supabase Auth
     supabase_url: str = ""
+    supabase_internal_url: str = ""
     supabase_key: str = ""
     supabase_jwt_secret: str = ""
 
@@ -29,6 +30,18 @@ class Settings(BaseSettings):
     @property
     def allowed_origins_list(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+
+    @property
+    def supabase_base_urls(self) -> list[str]:
+        """Auth dogrulama icin denenecek taban URL'ler: once ic ag, sonra public."""
+        urls = []
+        if self.supabase_internal_url:
+            urls.append(self.supabase_internal_url.rstrip("/"))
+        if self.supabase_url:
+            u = self.supabase_url.rstrip("/")
+            if u not in urls:
+                urls.append(u)
+        return urls
 
     @field_validator("database_url")
     @classmethod
