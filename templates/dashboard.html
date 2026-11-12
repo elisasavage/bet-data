@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Bet Data Panel{% endblock %}
+
+{% block body %}
+<div class="app-container" x-data="dashboardApp()">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+            <span>Bet Data</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/arama" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+                <span>Kişi Listesi</span>
+            </a>
+            <a href="/tcsizler" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>TC'siler</span>
+            </a>
+            <a href="/auth/logout" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                </svg>
+                <span>Çıkış</span>
+            </a>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="page-header">
+            <h1 class="page-title">Dashboard</h1>
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+            </div>
+        </header>
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Toplam Kişi</div>
+                <div class="stat-value" x-text="stats.toplam_kisi.toLocaleString('tr-TR')">0</div>
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Toplam Telefon</div>
+                <div class="stat-value" x-text="stats.toplam_telefon.toLocaleString('tr-TR')">0</div>
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Toplam Email</div>
+                <div class="stat-value" x-text="stats.toplam_email.toLocaleString('tr-TR')">0</div>
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Toplam Site</div>
+                <div class="stat-value" x-text="stats.site_sayisi.toLocaleString('tr-TR')">0</div>
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <h2 class="card-section-title">
+            <span class="material-symbols-outlined">table_chart</span>
+            En çok üyeli site
+        </h2>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Site Adı</th>
+                        <th>Üye Sayısı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="site in stats.en_cok_uyelik" :key="site.site_adi">
+                        <tr>
+                            <td x-text="site.site_adi"></td>
+                            <td x-text="site.count.toLocaleString('tr-TR')"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Kimlik doğrulama httponly cookie ile yapılır; token artık sayfaya gömülmez.
+function dashboardApp() {
+    return {
+        stats: {
+            toplam_kisi: 0,
+            toplam_telefon: 0,
+            toplam_email: 0,
+            toplam_uyelik: 0,
+            site_sayisi: 0,
+            en_cok_uyelik: []
+        },
+        
+        async init() {
+            await this.loadStats();
+        },
+        
+        async loadStats() {
+            try {
+                const response = await fetch('/api/kisiler/stats', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) { window.location.href = '/'; return; }
+                if (response.ok) {
+                    this.stats = await response.json();
+                }
+            } catch (error) {
+                console.error('Stats yüklenemedi:', error);
+            }
+        }
+    }
+}
+</script>
+{% endblock %}
