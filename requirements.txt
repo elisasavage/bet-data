@@ -1,11 +1,13 @@
-fastapi==0.142.2
-uvicorn[standard]==0.54.0
-python-multipart==0.0.32
-sqlalchemy==2.0.54
+fastapi==0.162.5
+uvicorn==0.54.0
+uvloop==0.23.0; sys_platform != "win32"
+httptools==0.9.0
+python-multipart==0.0.33
+sqlalchemy==2.1.8
 psycopg2-binary==2.9.13
 python-jose[cryptography]==3.5.0
 httpx==0.28.1
 jinja2==3.1.6
 python-dotenv==1.2.4
-pydantic==2.13.5
-pydantic-settings==2.15.0
+pydantic==2.14.3
+pydantic-settings==2.16.2
