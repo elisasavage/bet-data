@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Giriş - Bet Data Panel{% endblock %}
+
+{% block body %}
+<div class="login-container">
+    <div class="login-box md-elevation-3">
+        <div class="login-logo">
+            <div class="login-brand-icon">
+                <span class="material-symbols-outlined">analytics</span>
+            </div>
+            <h1>Bet Data Panel</h1>
+            <p>Yönetim paneline erişmek için giriş yapın</p>
+        </div>
+
+        {% if error %}
+        <div class="snackbar snackbar-error" role="alert">
+            <span class="material-symbols-outlined">error</span>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form class="login-form" method="POST" action="/auth/login">
+            <div class="text-field text-field-outlined">
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="text-field-input"
+                    placeholder=" "
+                    autocomplete="email"
+                    required
+                >
+                <label for="email">E-posta</label>
+            </div>
+
+            <div class="text-field text-field-outlined">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="text-field-input"
+                    placeholder=" "
+                    autocomplete="current-password"
+                    required
+                >
+                <label for="password">Şifre</label>
+            </div>
+
+            <button type="submit" class="md-btn md-btn-filled md-btn-block">
+                Giriş Yap
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
