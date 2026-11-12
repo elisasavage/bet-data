@@ -15,6 +15,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from fastapi.middleware.gzip import GZipMiddleware
+
+from app import stats_cache
 from app.config import get_settings
 from app.database import engine, Base
 from app.routers import kisiler, search, tcsizler
@@ -66,6 +69,8 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
     except Exception as exc:  # noqa: BLE001
         print("UYARI: veritabani semasi dogrulanamadi: %s" % exc)
+    # Istatistikleri arka planda hazirla; ilk kullanici beklemesin.
+    stats_cache.warm_in_background()
     yield
 
 
@@ -83,6 +88,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Arama sonuclari (100-500 satir JSON) sikistirilarak gonderilir.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.mount("/static", StaticFiles(directory=str(BASE_PATH / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_PATH / "templates"))
