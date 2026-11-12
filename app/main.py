@@ -60,7 +60,12 @@ def _set_auth_cookies(response, access_token: str, refresh_token: str) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    # Veritabani hazir olmasa bile uygulama ayaga kalksin; /health her zaman cevap verir.
+    # Tablolar zaten restore ile olusturuldu; create_all yalnizca emniyet kemeri.
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:  # noqa: BLE001
+        print("UYARI: veritabani semasi dogrulanamadi: %s" % exc)
     yield
 
 
@@ -140,3 +145,19 @@ async def search_page(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/health/db")
+async def health_db():
+    """Veritabani baglantisini ayrica dogrular."""
+    from sqlalchemy import text
+    from app.database import engine as _engine
+    try:
+        with _engine.connect() as conn:
+            one = conn.execute(text("select 1")).scalar()
+            tables = conn.execute(text(
+                "select count(*) from information_schema.tables where table_schema='public'"
+            )).scalar()
+        return {"db": "ok", "select": one, "public_tables": tables}
+    except Exception as exc:  # noqa: BLE001
+        return {"db": "error", "detail": str(exc)[:200]}
