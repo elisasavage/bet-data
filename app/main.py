@@ -109,7 +109,7 @@ async def form_login(request: Request, email: str = Form(...), password: str = F
     except HTTPException as exc:
         message = exc.detail if exc.status_code == status.HTTP_429_TOO_MANY_REQUESTS else "Email veya şifre hatalı"
         return templates.TemplateResponse(
-            "login.html", {"request": request, "error": message}, status_code=exc.status_code
+            request, "login.html", {"error": message}, status_code=exc.status_code
         )
 
 
@@ -125,21 +125,21 @@ async def logout():
 async def login_page(request: Request):
     if await get_optional_user(request):
         return RedirectResponse(url="/dashboard", status_code=303)
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
     if not await get_optional_user(request):
         return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request, "dashboard.html")
 
 
 @app.get("/arama", response_class=HTMLResponse)
 async def search_page(request: Request):
     if not await get_optional_user(request):
         return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("search.html", {"request": request})
+    return templates.TemplateResponse(request, "search.html")
 
 
 @app.get("/health")
