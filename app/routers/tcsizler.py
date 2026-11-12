@@ -27,7 +27,7 @@ async def tcsizler_page(request: Request):
     user = await get_optional_user(request)
     if not user:
         return RedirectResponse(url="/", status_code=303)
-    return templates.TemplateResponse("tcsizler.html", {"request": request})
+    return templates.TemplateResponse(request, "tcsizler.html")
 
 
 @router.get("/api/list")
