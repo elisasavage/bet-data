@@ -2,7 +2,7 @@
 Pydantic şemaları - API request/response modelleri
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -15,8 +15,7 @@ class TelefonBase(BaseModel):
 class TelefonResponse(TelefonBase):
     id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============ Email ============
@@ -27,8 +26,7 @@ class EmailBase(BaseModel):
 class EmailResponse(EmailBase):
     id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============ Üyelik ============
@@ -40,8 +38,7 @@ class UyelikBase(BaseModel):
 class UyelikResponse(UyelikBase):
     id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============ Kişi ============
@@ -64,8 +61,7 @@ class KisiResponse(KisiBase):
     emailler: List[EmailResponse] = []
     uyelikler: List[UyelikResponse] = []
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class KisiListResponse(BaseModel):
@@ -78,8 +74,7 @@ class KisiListResponse(BaseModel):
     site_sayisi: int = 0
     siteler: List[str] = []
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============ Arama/Filtreleme ============
