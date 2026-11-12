@@ -1,22 +1,139 @@
 """
 Arama ve filtreleme işlemleri
+
+Performans notlari:
+- Uclar `def`: senkron DB cagrilari thread havuzunda calisir, paneli kilitlemez.
+- Isim aramasi tek ifade uzerinden yapilir; bu ifade pg_trgm GIN index'i
+  (idx_kisiler_adsoyad_trgm) ile birebir ayni olmalidir, yoksa index kullanilmaz.
+- Sayfadaki kisilerin telefon/email/site bilgisi kisi basina degil, 3 toplu
+  sorguyla cekilir (N+1 yok).
+- Filtresiz ve yalniz-site toplamlar onbellekten gelir.
 """
 
+from collections import defaultdict
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import func, or_, distinct
-from typing import Optional, List
+from sqlalchemy import func, literal_column, select, union
+from sqlalchemy.orm import Session, aliased
 
 from app.database import get_db
 from app.models import Kisi, Telefon, Email, Uyelik
 from app.schemas import SearchResponse, KisiListResponse
 from app.auth import get_current_user
+from app.stats_cache import kisi_stats
 
 router = APIRouter(prefix="/api/search", tags=["Search"])
 
+# idx_kisiler_adsoyad_trgm index ifadesiyle ayni. concat(isim,' ',soyisim) ile
+# esdegerdir; tek tek isim/soyisim eslesmelerini de kapsar.
+AD_SOYAD = literal_column("(coalesce(kisiler.isim,'') || ' ' || coalesce(kisiler.soyisim,''))")
+
+
+def _build_filters(q: Optional[str], site: Optional[str]) -> list:
+    filters = []
+
+    if q:
+        search_term = f"%{q}%"
+        if q.isdigit() and len(q) == 11:
+            # TC tam eşleşme
+            filters.append(Kisi.tc == q)
+        elif q.isdigit():
+            # TC parçası veya telefon. UNION: iki trigram index'i ayri ayri kullanilir
+            # (OR + alt sorgu tam tablo taramasina dusuyordu).
+            k2 = aliased(Kisi)
+            eslesen = union(
+                select(k2.id).where(k2.tc.like(search_term)),
+                select(Telefon.kisi_id).where(Telefon.telefon.like(search_term)),
+            )
+            filters.append(Kisi.id.in_(eslesen))
+        else:
+            # İsim/soyisim araması
+            filters.append(AD_SOYAD.ilike(search_term))
+
+    if site:
+        filters.append(
+            select(Uyelik.id)
+            .where(Uyelik.kisi_id == Kisi.id, Uyelik.site_adi == site)
+            .exists()
+        )
+
+    return filters
+
+
+def _count(db: Session, filters: list, q: Optional[str], site: Optional[str]) -> int:
+    if not q:
+        stats = kisi_stats.get()
+        if not site:
+            return stats["toplam_kisi"]
+        # (kisi_id, site_adi) unique: sitedeki uyelik sayisi = sitedeki kisi sayisi.
+        cached = stats["site_counts"].get(site)
+        if cached is not None:
+            return cached
+    return db.execute(select(func.count()).select_from(Kisi).where(*filters)).scalar() or 0
+
+
+def _search(db: Session, q: Optional[str], site: Optional[str], page: int, per_page: int) -> SearchResponse:
+    filters = _build_filters(q, site)
+    total = _count(db, filters, q, site)
+
+    kisiler = db.execute(
+        select(Kisi.id, Kisi.tc, Kisi.isim, Kisi.soyisim)
+        .where(*filters)
+        .order_by(Kisi.id)
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    ).all()
+
+    ids = [k.id for k in kisiler]
+    siteler: dict = defaultdict(list)
+    telefon_sayisi: dict = {}
+    email_sayisi: dict = {}
+
+    if ids:
+        for kisi_id, site_adi in db.execute(
+            select(Uyelik.kisi_id, Uyelik.site_adi)
+            .where(Uyelik.kisi_id.in_(ids))
+            .order_by(Uyelik.kisi_id, Uyelik.id)
+        ):
+            if site_adi is not None:
+                siteler[kisi_id].append(site_adi)
+        telefon_sayisi = dict(db.execute(
+            select(Telefon.kisi_id, func.count())
+            .where(Telefon.kisi_id.in_(ids))
+            .group_by(Telefon.kisi_id)
+        ).all())
+        email_sayisi = dict(db.execute(
+            select(Email.kisi_id, func.count())
+            .where(Email.kisi_id.in_(ids))
+            .group_by(Email.kisi_id)
+        ).all())
+
+    items = [
+        KisiListResponse(
+            id=k.id,
+            tc=k.tc,
+            isim=k.isim,
+            soyisim=k.soyisim,
+            telefon_sayisi=telefon_sayisi.get(k.id, 0),
+            email_sayisi=email_sayisi.get(k.id, 0),
+            site_sayisi=len(siteler[k.id]),
+            siteler=siteler[k.id],
+        )
+        for k in kisiler
+    ]
+
+    return SearchResponse(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=(total + per_page - 1) // per_page,
+    )
+
 
 @router.get("", response_model=SearchResponse)
-async def search_kisiler(
+def search_kisiler(
     q: Optional[str] = Query(None, description="TC, isim, soyisim veya telefon"),
     site: Optional[str] = Query(None, description="Site filtresi"),
     page: int = Query(1, ge=1),
@@ -27,78 +144,11 @@ async def search_kisiler(
     """
     Kişileri ara ve filtrele - varsayılan olarak tüm listeyi gösterir
     """
-    # Base query
-    query = db.query(Kisi)
-    
-    # Text search (opsiyonel - boşsa tüm liste gelir)
-    if q:
-        search_term = f"%{q}%"
-        # TC tam eşleşme veya like
-        if q.isdigit() and len(q) == 11:
-            query = query.filter(Kisi.tc == q)
-        elif q.isdigit():
-            # Telefon araması
-            subquery = db.query(Telefon.kisi_id).filter(
-                Telefon.telefon.like(search_term)
-            ).distinct()
-            query = query.filter(
-                or_(
-                    Kisi.tc.like(search_term),
-                    Kisi.id.in_(subquery)
-                )
-            )
-        else:
-            # İsim/soyisim araması
-            query = query.filter(
-                or_(
-                    Kisi.isim.ilike(search_term),
-                    Kisi.soyisim.ilike(search_term),
-                    func.concat(Kisi.isim, ' ', Kisi.soyisim).ilike(search_term)
-                )
-            )
-    
-    # Site filtresi
-    if site:
-        subquery = db.query(Uyelik.kisi_id).filter(
-            Uyelik.site_adi == site
-        ).distinct()
-        query = query.filter(Kisi.id.in_(subquery))
-    
-    # Toplam sayı
-    total = query.count()
-    
-    # Pagination
-    offset = (page - 1) * per_page
-    kisiler = query.offset(offset).limit(per_page).all()
-    
-    # Response oluştur
-    items = []
-    for kisi in kisiler:
-        siteler = [u.site_adi for u in kisi.uyelikler]
-        items.append(KisiListResponse(
-            id=kisi.id,
-            tc=kisi.tc,
-            isim=kisi.isim,
-            soyisim=kisi.soyisim,
-            telefon_sayisi=len(kisi.telefonlar),
-            email_sayisi=len(kisi.emailler),
-            site_sayisi=len(kisi.uyelikler),
-            siteler=siteler
-        ))
-    
-    total_pages = (total + per_page - 1) // per_page
-    
-    return SearchResponse(
-        items=items,
-        total=total,
-        page=page,
-        per_page=per_page,
-        total_pages=total_pages
-    )
+    return _search(db, q, site, page, per_page)
 
 
 @router.get("/by-site/{site_adi}", response_model=SearchResponse)
-async def get_kisiler_by_site(
+def get_kisiler_by_site(
     site_adi: str,
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
@@ -108,36 +158,4 @@ async def get_kisiler_by_site(
     """
     Belirli bir siteye üye kişileri getir
     """
-    subquery = db.query(Uyelik.kisi_id).filter(
-        Uyelik.site_adi == site_adi
-    ).distinct()
-    
-    query = db.query(Kisi).filter(Kisi.id.in_(subquery))
-    
-    total = query.count()
-    offset = (page - 1) * per_page
-    kisiler = query.offset(offset).limit(per_page).all()
-    
-    items = []
-    for kisi in kisiler:
-        siteler = [u.site_adi for u in kisi.uyelikler]
-        items.append(KisiListResponse(
-            id=kisi.id,
-            tc=kisi.tc,
-            isim=kisi.isim,
-            soyisim=kisi.soyisim,
-            telefon_sayisi=len(kisi.telefonlar),
-            email_sayisi=len(kisi.emailler),
-            site_sayisi=len(kisi.uyelikler),
-            siteler=siteler
-        ))
-    
-    total_pages = (total + per_page - 1) // per_page
-    
-    return SearchResponse(
-        items=items,
-        total=total,
-        page=page,
-        per_page=per_page,
-        total_pages=total_pages
-    )
+    return _search(db, None, site_adi, page, per_page)
