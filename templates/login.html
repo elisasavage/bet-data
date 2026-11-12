@@ -3,25 +3,24 @@
 {% block title %}Giriş - Bet Data Panel{% endblock %}
 
 {% block body %}
-<div class="login-container">
-    <div class="login-box md-elevation-3">
-        <div class="login-logo">
-            <div class="login-brand-icon">
-                <span class="material-symbols-outlined">analytics</span>
-            </div>
-            <h1>Bet Data Panel</h1>
-            <p>Yönetim paneline erişmek için giriş yapın</p>
-        </div>
+<main class="login">
+    {% include "_theme_toggle.html" %}
+
+    <div class="login-card">
+        <img class="i3d login-art" src="/static/icons/lock.webp" alt="" width="128" height="128">
+
+        <h1 class="login-title">Bet Data Panel</h1>
+        <p class="login-text">Devam etmek için giriş yapın.</p>
 
         {% if error %}
-        <div class="snackbar snackbar-error" role="alert">
-            <span class="material-symbols-outlined">error</span>
-            {{ error }}
+        <div class="alert" role="alert">
+            <img class="i3d" src="/static/icons/warning.webp" alt="" width="28" height="28">
+            <span>{{ error }}</span>
         </div>
         {% endif %}
 
         <form class="login-form" method="POST" action="/auth/login">
-            <div class="text-field text-field-outlined">
+            <div class="text-field">
                 <input
                     type="email"
                     id="email"
@@ -34,7 +33,7 @@
                 <label for="email">E-posta</label>
             </div>
 
-            <div class="text-field text-field-outlined">
+            <div class="text-field">
                 <input
                     type="password"
                     id="password"
@@ -47,10 +46,8 @@
                 <label for="password">Şifre</label>
             </div>
 
-            <button type="submit" class="md-btn md-btn-filled md-btn-block">
-                Giriş Yap
-            </button>
+            <button type="submit" class="btn btn-block">Giriş yap</button>
         </form>
     </div>
-</div>
+</main>
 {% endblock %}
