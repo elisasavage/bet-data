@@ -91,7 +91,17 @@ app.add_middleware(
 # Arama sonuclari (100-500 satir JSON) sikistirilarak gonderilir.
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
-app.mount("/static", StaticFiles(directory=str(BASE_PATH / "static")), name="static")
+class _StaticFiles(StaticFiles):
+    """3D ikonlar degismez; tarayici her sayfada yeniden sormasin (CSS yine ETag ile dogrulanir)."""
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200 and path.replace("\\", "/").startswith("icons/"):
+            response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+        return response
+
+
+app.mount("/static", _StaticFiles(directory=str(BASE_PATH / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 app.include_router(kisiler.router)
