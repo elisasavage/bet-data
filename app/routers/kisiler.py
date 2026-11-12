@@ -1,58 +1,52 @@
 """
 Kişi CRUD işlemleri
+
+Not: uclar bilerek `def` (async degil). SQLAlchemy senkron calisir; `async def`
+icinde cagrilirsa tek bir yavas sorgu butun paneli kilitler. `def` uclari FastAPI
+thread havuzunda calistirir, istekler birbirini beklemez.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy.orm import Session, selectinload
 from typing import List
 
 from app.database import get_db
-from app.models import Kisi, Telefon, Email, Uyelik
-from app.schemas import KisiResponse, KisiCreate, KisiListResponse, StatsResponse
+from app.models import Kisi
+from app.schemas import KisiResponse, StatsResponse
 from app.auth import get_current_user
+from app.stats_cache import kisi_stats
 
 router = APIRouter(prefix="/api/kisiler", tags=["Kisiler"])
 
+_DETAY = (
+    selectinload(Kisi.telefonlar),
+    selectinload(Kisi.emailler),
+    selectinload(Kisi.uyelikler),
+)
+
 
 @router.get("/stats", response_model=StatsResponse)
-async def get_stats(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    """İstatistikleri getir"""
-    toplam_kisi = db.query(func.count(Kisi.id)).scalar()
-    toplam_telefon = db.query(func.count(Telefon.id)).scalar()
-    toplam_email = db.query(func.count(Email.id)).scalar()
-    toplam_uyelik = db.query(func.count(Uyelik.id)).scalar()
-    
-    # Benzersiz site sayısı
-    site_sayisi = db.query(func.count(func.distinct(Uyelik.site_adi))).scalar()
-    
-    # En çok üyelik olan siteler
-    en_cok_uyelik = db.query(
-        Uyelik.site_adi,
-        func.count(Uyelik.id).label('count')
-    ).group_by(Uyelik.site_adi).order_by(func.count(Uyelik.id).desc()).limit(10).all()
-    
+def get_stats(current_user: dict = Depends(get_current_user)):
+    """İstatistikleri getir (önbellekten)"""
+    stats = kisi_stats.get()
     return StatsResponse(
-        toplam_kisi=toplam_kisi or 0,
-        toplam_telefon=toplam_telefon or 0,
-        toplam_email=toplam_email or 0,
-        toplam_uyelik=toplam_uyelik or 0,
-        site_sayisi=site_sayisi or 0,
-        en_cok_uyelik=[{"site_adi": s[0], "count": s[1]} for s in en_cok_uyelik]
+        toplam_kisi=stats["toplam_kisi"],
+        toplam_telefon=stats["toplam_telefon"],
+        toplam_email=stats["toplam_email"],
+        toplam_uyelik=stats["toplam_uyelik"],
+        site_sayisi=stats["site_sayisi"],
+        en_cok_uyelik=stats["en_cok_uyelik"],
     )
 
 
 @router.get("/{kisi_id}", response_model=KisiResponse)
-async def get_kisi(
+def get_kisi(
     kisi_id: int,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     """Kişi detaylarını getir"""
-    kisi = db.query(Kisi).filter(Kisi.id == kisi_id).first()
+    kisi = db.query(Kisi).options(*_DETAY).filter(Kisi.id == kisi_id).first()
     if not kisi:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -62,13 +56,13 @@ async def get_kisi(
 
 
 @router.get("/tc/{tc}", response_model=KisiResponse)
-async def get_kisi_by_tc(
+def get_kisi_by_tc(
     tc: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     """TC ile kişi getir"""
-    kisi = db.query(Kisi).filter(Kisi.tc == tc).first()
+    kisi = db.query(Kisi).options(*_DETAY).filter(Kisi.tc == tc).first()
     if not kisi:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,10 +72,6 @@ async def get_kisi_by_tc(
 
 
 @router.get("/siteler/liste", response_model=List[str])
-async def get_siteler(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    """Tüm siteleri listele"""
-    siteler = db.query(func.distinct(Uyelik.site_adi)).all()
-    return [s[0] for s in siteler if s[0]]
+def get_siteler(current_user: dict = Depends(get_current_user)):
+    """Tüm siteleri listele (önbellekten)"""
+    return kisi_stats.get()["siteler"]
