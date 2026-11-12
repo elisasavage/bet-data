@@ -12,7 +12,7 @@
             <img class="i3d stat-art" src="/static/icons/id-card.webp" alt="" width="148" height="148">
             <div class="stat-label">Toplam kişi</div>
             <div>
-                <div class="stat-value" :class="{ sk: !loaded }" x-text="fmt(stats.toplam_kisi)">0</div>
+                <div class="stat-value"><span class="sk" x-show="!loaded" aria-hidden="true">&nbsp;</span><span x-show="loaded" x-cloak x-text="fmt(stats.toplam_kisi)"></span></div>
                 <div class="stat-foot">TC kimlik numarasıyla kayıtlı</div>
             </div>
         </article>
@@ -21,7 +21,7 @@
             <img class="i3d stat-art" src="/static/icons/phone.webp" alt="" width="64" height="64">
             <div class="stat-label">Telefon</div>
             <div>
-                <div class="stat-value" :class="{ sk: !loaded }" x-text="fmt(stats.toplam_telefon)">0</div>
+                <div class="stat-value"><span class="sk" x-show="!loaded" aria-hidden="true">&nbsp;</span><span x-show="loaded" x-cloak x-text="fmt(stats.toplam_telefon)"></span></div>
                 <div class="stat-foot" x-show="loaded" x-cloak x-text="'kişi başına ' + perKisi(stats.toplam_telefon)"></div>
             </div>
         </article>
@@ -30,7 +30,7 @@
             <img class="i3d stat-art" src="/static/icons/mail.webp" alt="" width="64" height="64">
             <div class="stat-label">E-posta</div>
             <div>
-                <div class="stat-value" :class="{ sk: !loaded }" x-text="fmt(stats.toplam_email)">0</div>
+                <div class="stat-value"><span class="sk" x-show="!loaded" aria-hidden="true">&nbsp;</span><span x-show="loaded" x-cloak x-text="fmt(stats.toplam_email)"></span></div>
                 <div class="stat-foot" x-show="loaded" x-cloak x-text="'kişi başına ' + perKisi(stats.toplam_email)"></div>
             </div>
         </article>
@@ -39,7 +39,7 @@
             <img class="i3d stat-art" src="/static/icons/ticket.webp" alt="" width="64" height="64">
             <div class="stat-label">Üyelik</div>
             <div>
-                <div class="stat-value" :class="{ sk: !loaded }" x-text="fmt(stats.toplam_uyelik)">0</div>
+                <div class="stat-value"><span class="sk" x-show="!loaded" aria-hidden="true">&nbsp;</span><span x-show="loaded" x-cloak x-text="fmt(stats.toplam_uyelik)"></span></div>
                 <div class="stat-foot" x-show="loaded" x-cloak x-text="'kişi başına ' + perKisi(stats.toplam_uyelik)"></div>
             </div>
         </article>
@@ -48,14 +48,14 @@
             <img class="i3d stat-art" src="/static/icons/globe.webp" alt="" width="64" height="64">
             <div class="stat-label">Site</div>
             <div>
-                <div class="stat-value" :class="{ sk: !loaded }" x-text="fmt(stats.site_sayisi)">0</div>
+                <div class="stat-value"><span class="sk" x-show="!loaded" aria-hidden="true">&nbsp;</span><span x-show="loaded" x-cloak x-text="fmt(stats.site_sayisi)"></span></div>
                 <div class="stat-foot" x-show="loaded && stats.en_cok_uyelik.length" x-cloak
                      x-text="'en büyüğü ' + (stats.en_cok_uyelik[0]?.site_adi || '')"></div>
             </div>
         </article>
     </section>
 
-    <section class="card" aria-labelledby="rank-title">
+    <section class="card rank-card" aria-labelledby="rank-title">
         <div class="card-head">
             <h2 class="card-title" id="rank-title">En çok üyeli siteler</h2>
             <span class="card-note">üyelik · pay</span>
