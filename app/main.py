@@ -92,7 +92,7 @@ app.add_middleware(
 # Arama sonuclari (100-500 satir JSON) sikistirilarak gonderilir.
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
-# python:3.11-slim .webp'i tanimiyor; ikonlar application/octet-stream gitmesin.
+# Slim imajda mime tablosu eksik olabiliyor; ikonlar application/octet-stream gitmesin.
 mimetypes.add_type("image/webp", ".webp")
 
 
