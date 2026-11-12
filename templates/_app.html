@@ -1,0 +1,48 @@
+{# Giriş sonrası sayfaların ortak kabuğu: gezinme + sayfa başlığı.
+   Sayfa şunları tanımlar:  {% set active = "dashboard|arama|tcsizler" %}  {% set x_data = "...()" %} #}
+{% extends "base.html" %}
+
+{% set nav_items = [
+    ("dashboard", "/dashboard", "chart", "Dashboard"),
+    ("arama", "/arama", "id-card", "Kişi Listesi"),
+    ("tcsizler", "/tcsizler", "clipboard", "TC'sizler"),
+] %}
+
+{% block body %}
+<div class="app" x-data="{{ x_data }}">
+    <nav class="nav" aria-label="Ana gezinme">
+        <a class="brand" href="/dashboard">
+            <img class="i3d" src="/static/icons/chart.webp" alt="" width="36" height="36">
+            <span>Bet Data</span>
+        </a>
+
+        {% for key, href, icon, label in nav_items %}
+        <a class="nav-item" href="{{ href }}" {% if key == active %}aria-current="page"{% endif %}>
+            <span class="nav-ico"><img class="i3d" src="/static/icons/{{ icon }}.webp" alt="" width="28" height="28"></span>
+            <span>{{ label }}</span>
+        </a>
+        {% endfor %}
+
+        <a class="nav-item nav-end" href="/auth/logout">
+            <span class="nav-ico"><img class="i3d" src="/static/icons/door.webp" alt="" width="28" height="28"></span>
+            <span>Çıkış</span>
+        </a>
+    </nav>
+
+    <main class="main">
+        <div class="main-inner">
+            <header class="page-head">
+                <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                <div class="page-actions">
+                    {% block page_meta %}{% endblock %}
+                    {% include "_theme_toggle.html" %}
+                </div>
+            </header>
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {% block overlays %}{% endblock %}
+</div>
+{% endblock %}
