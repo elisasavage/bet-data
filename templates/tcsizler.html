@@ -1,148 +1,87 @@
-{% extends "base.html" %}
+{% extends "_app.html" %}
+{% set active = "tcsizler" %}
+{% set x_data = "tcsizlerApp()" %}
 
-{% block title %}TC'siler - Bet Data Panel{% endblock %}
+{% block title %}TC'sizler - Bet Data Panel{% endblock %}
+{% block page_title %}TC'sizler{% endblock %}
 
-{% block body %}
-<div class="app-container" x-data="tcsizlerApp()">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-            </svg>
-            <span>Bet Data</span>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <a href="/dashboard" class="nav-item">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-                </svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="/arama" class="nav-item">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                </svg>
-                <span>Kişi Listesi</span>
-            </a>
-            <a href="/tcsizler" class="nav-item active">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <span>TC'siler</span>
-            </a>
-            <a href="/auth/logout" class="nav-item">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                </svg>
-                <span>Çıkış</span>
-            </a>
-        </nav>
-    </aside>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-        <header class="page-header">
-            <h1 class="page-title">TC'siler</h1>
-            <div class="pagination-info" x-show="total > 0">
-                Toplam: <strong x-text="total.toLocaleString('tr-TR')"></strong> kayıt
-            </div>
-        </header>
-        
-        <!-- Search Box -->
-        <div class="search-container">
-            <div class="search-box">
-                <div class="search-input-wrapper">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                    </svg>
-                    <input 
-                        type="text" 
-                        class="search-input" 
-                        placeholder="İsim, soyisim veya telefon..."
-                        x-model="query"
-                        @keyup.enter="search()"
-                    >
-                </div>
-                
-                <select class="filter-select" x-model="selectedSite">
-                    <option value="">Tüm Siteler</option>
-                    <template x-for="site in siteler" :key="site">
-                        <option :value="site" x-text="site"></option>
-                    </template>
-                </select>
-                
-                <button class="search-btn" @click="search()">
-                    Ara
-                </button>
-            </div>
-        </div>
-        
-        <!-- Results -->
-        <div class="table-container">
-            <!-- Loading -->
-            <div class="loading" x-show="loading">
-                <div class="spinner"></div>
-            </div>
-            
-            <!-- Empty State -->
-            <div class="empty-state" x-show="!loading && results.length === 0">
-                <svg viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                </svg>
-                <p>Sonuç bulunamadı</p>
-            </div>
-            
-            <!-- Table -->
-            <table class="data-table" x-show="!loading && results.length > 0">
-                <thead>
+{% block page_meta %}
+<div class="page-meta" x-show="total > 0" x-cloak>
+    <strong class="num" x-text="total.toLocaleString('tr-TR')"></strong> kayıt
+</div>
+{% endblock %}
+
+{% block content %}
+<form class="toolbar" role="search" @submit.prevent="search()">
+    <div class="field">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="search" class="field-input" x-model="query"
+               placeholder="İsim, soyisim veya telefon" aria-label="Kayıt ara">
+    </div>
+
+    <select class="select" x-model="selectedSite" aria-label="Site filtresi">
+        <option value="">Tüm siteler</option>
+        <template x-for="site in siteler" :key="site">
+            <option :value="site" x-text="site"></option>
+        </template>
+    </select>
+
+    <button type="submit" class="btn">Ara</button>
+</form>
+
+<div class="card table-card" :class="{ 'is-loading': loading }" :aria-busy="loading">
+    <div class="progress" x-show="loading" role="progressbar" aria-label="Yükleniyor"></div>
+
+    <div class="empty" x-show="!loading && results.length === 0" x-cloak>
+        <img class="i3d" src="/static/icons/search.webp" alt="" width="96" height="96">
+        <p class="empty-title">Sonuç bulunamadı</p>
+        <p class="empty-text">Aramayı kısaltmayı veya site filtresini kaldırmayı deneyin.</p>
+    </div>
+
+    <div class="table-scroll" x-show="results.length > 0" x-cloak>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">İsim soyisim</th>
+                    <th scope="col"><span class="th-ico"><img class="i3d" src="/static/icons/phone.webp" alt="" width="20" height="20">Telefon</span></th>
+                    <th scope="col"><span class="th-ico"><img class="i3d" src="/static/icons/mail.webp" alt="" width="20" height="20">E-posta</span></th>
+                    <th scope="col"><span class="th-ico"><img class="i3d" src="/static/icons/globe.webp" alt="" width="20" height="20">Site</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="kisi in results" :key="kisi.id">
                     <tr>
-                        <th>İsim Soyisim</th>
-                        <th>Telefon</th>
-                        <th>Email</th>
-                        <th>Site</th>
+                        <td x-text="fullName(kisi) || '—'" :class="{ muted: !fullName(kisi) }"></td>
+                        <td x-text="kisi.telefon_sayisi > 0 ? 'Var' : '—'" :class="{ muted: !kisi.telefon_sayisi }"></td>
+                        <td x-text="kisi.email_sayisi > 0 ? 'Var' : '—'" :class="{ muted: !kisi.email_sayisi }"></td>
+                        <td>
+                            <div class="site-tags">
+                                <template x-for="site in kisi.siteler" :key="site">
+                                    <span class="site-tag" x-text="site"></span>
+                                </template>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <template x-for="kisi in results" :key="kisi.id">
-                        <tr>
-                            <td x-text="(kisi.isim || '') + ' ' + (kisi.soyisim || '')"></td>
-                            <td x-text="kisi.telefon_sayisi > 0 ? 'Var' : '-'"></td>
-                            <td x-text="kisi.email_sayisi > 0 ? 'Var' : '-'"></td>
-                            <td>
-                                <div class="site-tags">
-                                    <template x-for="site in kisi.siteler" :key="site">
-                                        <span class="site-tag" x-text="site"></span>
-                                    </template>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-            
-            <!-- Pagination -->
-            <div class="pagination" x-show="totalPages > 1">
-                <button class="pagination-btn" @click="prevPage()" :disabled="page === 1">
-                    Önceki
-                </button>
-                <span class="pagination-info">
-                    Sayfa <span x-text="page"></span> / <span x-text="totalPages"></span>
-                    (<span x-text="total"></span> sonuç)
-                </span>
-                <button class="pagination-btn" @click="nextPage()" :disabled="page >= totalPages">
-                    Sonraki
-                </button>
-            </div>
-        </div>
-    </main>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" x-show="totalPages > 1" x-cloak>
+        <button type="button" class="btn btn-tonal" @click="prevPage()" :disabled="page === 1 || loading">Önceki</button>
+        <span class="pagination-info">
+            Sayfa <span x-text="page.toLocaleString('tr-TR')"></span> / <span x-text="totalPages.toLocaleString('tr-TR')"></span>
+        </span>
+        <button type="button" class="btn btn-tonal" @click="nextPage()" :disabled="page >= totalPages || loading">Sonraki</button>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Kimlik doğrulama httponly cookie ile yapılır; token artık sayfaya gömülmez.
+// Kimlik doğrulama httponly cookie ile yapılır; token sayfaya gömülmez.
 function tcsizlerApp() {
     return {
         query: '',
@@ -154,17 +93,20 @@ function tcsizlerApp() {
         perPage: 100,
         total: 0,
         totalPages: 0,
-        
-        async init() {
-            await this.loadSiteler();
-            await this.fetchResults();
+
+        init() {
+            // Site listesi ve ilk sayfa birbirini beklemeden yüklenir.
+            this.loadSiteler();
+            this.fetchResults();
         },
-        
+
+        fullName(kisi) {
+            return [kisi?.isim, kisi?.soyisim].filter(Boolean).join(' ');
+        },
+
         async loadSiteler() {
             try {
-                const response = await fetch('/api/kisiler/siteler/liste', {
-                    credentials: 'same-origin'
-                });
+                const response = await fetch('/api/kisiler/siteler/liste', { credentials: 'same-origin' });
 
                 if (response.status === 401) { window.location.href = '/'; return; }
                 if (response.ok) {
@@ -174,28 +116,26 @@ function tcsizlerApp() {
                 console.error('Siteler yüklenemedi:', error);
             }
         },
-        
+
         async search() {
-            this.loading = true;
             this.page = 1;
             await this.fetchResults();
         },
-        
+
         async fetchResults() {
+            this.loading = true;
             try {
                 let url = `/tcsizler/api/list?page=${this.page}&per_page=${this.perPage}`;
-                
+
                 if (this.query) {
                     url += `&q=${encodeURIComponent(this.query)}`;
                 }
-                
+
                 if (this.selectedSite) {
                     url += `&site=${encodeURIComponent(this.selectedSite)}`;
                 }
-                
-                const response = await fetch(url, {
-                    credentials: 'same-origin'
-                });
+
+                const response = await fetch(url, { credentials: 'same-origin' });
 
                 if (response.status === 401) { window.location.href = '/'; return; }
                 if (response.ok) {
@@ -214,14 +154,14 @@ function tcsizlerApp() {
                 this.loading = false;
             }
         },
-        
+
         prevPage() {
             if (this.page > 1) {
                 this.page--;
                 this.fetchResults();
             }
         },
-        
+
         nextPage() {
             if (this.page < this.totalPages) {
                 this.page++;
