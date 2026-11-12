@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # Veritabani (Coolify Supabase ic ag)
-    database_url: str = "postgresql://postgres:postgres@supabase-db:5432/postgres"
+    database_url: str = "postgresql+psycopg2://postgres:postgres@supabase-db:5432/postgres"
 
     # Supabase Auth
     supabase_url: str = ""
@@ -46,8 +46,14 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def fix_postgres_url(cls, v: str) -> str:
-        if v and v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql://", 1)
+        """Surucuyu acikca psycopg2'ye sabitle.
+
+        SQLAlchemy 2.1'den itibaren surucusuz `postgresql://` adresi psycopg (v3) ile
+        acilir; bu projede kurulu surucu psycopg2 oldugu icin uygulama acilista coker.
+        """
+        for prefix in ("postgres://", "postgresql://"):
+            if v and v.startswith(prefix):
+                return "postgresql+psycopg2://" + v[len(prefix):]
         return v
 
     model_config = SettingsConfigDict(
