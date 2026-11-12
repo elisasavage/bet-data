@@ -222,11 +222,13 @@ body {
     flex: 1;
     min-width: 0;
     margin-left: var(--nav-width);
-    padding: 28px 40px 56px;
+    padding: 28px clamp(24px, 2.8vw, 56px) 56px;
 }
 
+/* Genişlik sınırı yok: içerik ekranı doldurur. Düzen, ekran yerine bu alanın
+   genişliğine göre karar verir (gezinme rayı/çekmecesi açıkken de doğru çalışır). */
 .main-inner {
-    max-width: 1280px;
+    container: main / inline-size;
 }
 
 .page-head {
@@ -353,12 +355,20 @@ body {
 
 .dash {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
-    align-items: start;
 }
 
+/* Yeterli yer varsa iki sütun; sütunlar eşit boyda biter. */
+@container main (min-width: 880px) {
+    .dash {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    }
+}
+
+/* Kartların içi (rakam, ikon, boşluk) bu alanın genişliğiyle ölçeklenir: cqi = alan genişliğinin %1'i. */
 .stats {
+    container: stats / inline-size;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
@@ -366,6 +376,8 @@ body {
 
 .stat {
     --tone: var(--md-sys-color-secondary-container);
+    --art: clamp(44px, 10cqi, 76px);
+    --pad: clamp(16px, 3.2cqi, 24px);
     position: relative;
     isolation: isolate;
     overflow: hidden;
@@ -373,8 +385,8 @@ body {
     flex-direction: column;
     justify-content: space-between;
     gap: 20px;
-    min-height: 148px;
-    padding: 20px;
+    min-height: clamp(124px, 22cqi, 184px);
+    padding: var(--pad);
     border-radius: var(--md-shape-extra-large);
     background: var(--md-sys-color-surface-container-low);
 }
@@ -393,10 +405,10 @@ body {
 }
 
 .stat-art {
-    --s: 64px;
+    --s: var(--art);
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: calc(var(--pad) - 4px);
+    right: calc(var(--pad) - 4px);
     filter: var(--icon-shadow);
     transition: transform 0.5s var(--md-motion-emphasized);
 }
@@ -406,15 +418,15 @@ body {
 }
 
 .stat-label {
-    max-width: calc(100% - 76px);
+    max-width: calc(100% - var(--art) - 8px);
     font-size: 14px;
     font-weight: 500;
     color: var(--md-sys-color-on-surface-variant);
 }
 
 .stat-value {
-    font-size: 28px;
-    line-height: 36px;
+    font-size: clamp(20px, 6.4cqi, 36px);
+    line-height: 1.25;
     letter-spacing: -0.01em;
     font-variant-numeric: tabular-nums;
 }
@@ -426,9 +438,10 @@ body {
 }
 
 .stat--hero {
+    --art: clamp(96px, 22cqi, 184px);
+    --pad: clamp(22px, 4.4cqi, 36px);
     grid-column: 1 / -1;
-    min-height: 228px;
-    padding: 28px;
+    min-height: clamp(200px, 36cqi, 300px);
     background: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
 }
@@ -441,12 +454,6 @@ body {
     background: radial-gradient(closest-side, color-mix(in srgb, var(--md-sys-color-primary) 34%, transparent), transparent);
 }
 
-.stat--hero .stat-art {
-    --s: 148px;
-    top: 16px;
-    right: 20px;
-}
-
 .stat--hero .stat-label,
 .stat--hero .stat-foot {
     color: inherit;
@@ -454,12 +461,11 @@ body {
 }
 
 .stat--hero .stat-label {
-    max-width: calc(100% - 172px);
     font-size: 16px;
 }
 
 .stat--hero .stat-value {
-    font-size: clamp(40px, 4.4vw, 60px);
+    font-size: clamp(36px, 10.5cqi, 72px);
     line-height: 1.05;
     letter-spacing: -0.03em;
 }
@@ -521,7 +527,16 @@ body {
     color: var(--md-sys-color-on-surface-variant);
 }
 
+/* Sıralama kartı yanındaki sütunla aynı boyda biter; satırlar aradaki farkı eşit paylaşır. */
+.rank-card {
+    display: flex;
+    flex-direction: column;
+}
+
 .rank {
+    flex: 1;
+    display: grid;
+    grid-auto-rows: minmax(44px, 1fr);
     list-style: none;
     padding: 4px 8px 12px;
 }
@@ -531,7 +546,6 @@ body {
     grid-template-columns: 28px minmax(84px, 150px) minmax(40px, 1fr) 88px 52px;
     align-items: center;
     gap: 14px;
-    min-height: 44px;
     padding: 0 16px;
     border-radius: var(--md-shape-medium);
     font-size: 14px;
@@ -1094,10 +1108,6 @@ body {
         margin-left: var(--nav-rail-width);
         padding: 24px 24px 48px;
     }
-
-    .dash {
-        grid-template-columns: minmax(0, 1fr);
-    }
 }
 
 /* Telefon: alt gezinme çubuğu */
@@ -1157,42 +1167,8 @@ body {
         min-width: 0;
     }
 
-    .stat--hero {
-        min-height: 200px;
-        padding: 22px;
-    }
-
-    .stat--hero .stat-art {
-        --s: 112px;
-    }
-
-    .stat--hero .stat-label {
-        max-width: calc(100% - 124px);
-    }
-
-    /* İki sütun korunur: rakam ve ikon küçülür, sayfa uzamaz. */
     .stats {
         gap: 12px;
-    }
-
-    .stat:not(.stat--hero) {
-        min-height: 124px;
-        padding: 16px;
-    }
-
-    .stat:not(.stat--hero) .stat-art {
-        --s: 44px;
-        top: 12px;
-        right: 12px;
-    }
-
-    .stat:not(.stat--hero) .stat-label {
-        max-width: calc(100% - 52px);
-    }
-
-    .stat:not(.stat--hero) .stat-value {
-        font-size: 22px;
-        line-height: 28px;
     }
 
     .rank-row {
